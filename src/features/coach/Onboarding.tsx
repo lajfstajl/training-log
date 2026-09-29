@@ -54,29 +54,46 @@ function Conversation({ initial, locations }: { initial: StoredProfile | null; l
   )
   const [step, setStep] = useState(editing ? STEPS.indexOf('summary') : 0)
   const [pad, setPad] = useState<{ label: string; initial?: number; onDone: (n: number) => void } | null>(null)
-  const endRef = useRef<HTMLDivElement>(null)
+  // The question currently open for an answer; scrolled into view whenever it changes.
+  const currentRef = useRef<HTMLDivElement>(null)
   const set = (patch: Partial<StoredProfile>) => setP((x) => ({ ...x, ...patch }))
   // First run: walk through the questions. Editing: each answer returns to the summary.
   const next = () => setStep((s) => (editing ? STEPS.indexOf('summary') : Math.min(STEPS.length - 1, s + 1)))
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [step])
+    // First run: keep the newest question in view. Editing: show the question that was tapped.
+    currentRef.current?.scrollIntoView({ behavior: 'smooth', block: editing ? 'start' : 'end' })
+  }, [step, editing])
 
   const locName = (id: string) => locations.find((l) => l.id === id)?.name ?? id
 
-  const finish = async (then: string) => {
-    await saveProfile({ ...p, completedAt: Date.now() })
+  const persist = async () => {
+    await saveProfile({ ...p, completedAt: initial?.completedAt || Date.now() })
     await db.transaction('rw', db.locations, async () => {
       for (const id of p.locationIds) await db.locations.update(id, { equipment: equip[id] ?? [] })
     })
+  }
+
+  // Editing an existing setup saves every change right away (never lose data, no Save to forget).
+  const first = useRef(true)
+  useEffect(() => {
+    if (!editing) return
+    if (first.current) {
+      first.current = false
+      return
+    }
+    if (p.locationIds.length > 0) persist()
+  }, [p, equip])
+
+  const finish = async (then: string) => {
+    await persist()
     navigate(then, true)
   }
 
   // ---- Question text and the user's answer, per step ----
   const ask: Record<StepId, string> = {
     intro: editing
-      ? 'Here is how I coach you now. Tap any answer above to change it.'
+      ? 'Tap any of your answers to change it. Changes are saved right away.'
       : 'Hi, I’m your coach. A few quick questions so I can suggest the right session each time. It takes about a minute, and you can change everything later.',
     goal: 'What matters most right now?',
     aim: 'How many sessions a week is realistic in a normal week? Runs count too. This is a soft aim, not a schedule.',
@@ -346,14 +363,15 @@ function Conversation({ initial, locations }: { initial: StoredProfile | null; l
               <Button variant="primary" big onClick={() => finish('/checkin')}>
                 Start training
               </Button>
-              <Button onClick={() => finish('/')}>{editing ? 'Save' : 'Done for now'}</Button>
+              <Button onClick={() => finish('/')}>{editing ? 'Done' : 'Done for now'}</Button>
             </div>
           </>
         )
     }
   }
 
-  const visible = editing ? STEPS.slice(1) : STEPS.slice(0, step + 1)
+  // Editing shows every question (the first message becomes the "tap to change" hint).
+  const visible = editing ? STEPS : STEPS.slice(0, step + 1)
 
   return (
     <div className="flex min-h-full flex-col">
@@ -363,26 +381,25 @@ function Conversation({ initial, locations }: { initial: StoredProfile | null; l
           const i = STEPS.indexOf(id)
           const isCurrent = editing ? id === STEPS[step] : i === step
           return (
-            <div key={id} className="flex flex-col gap-2">
+            <div key={id} ref={isCurrent ? currentRef : undefined} className="flex scroll-mt-20 flex-col gap-2">
               <Bubble from="coach">{ask[id]}</Bubble>
               {isCurrent ? (
-                <div className="rounded-2xl border border-line p-3">{controls(id)}</div>
+                <div className="rounded-2xl border border-target/50 p-3">{controls(id)}</div>
               ) : (
                 answer[id] && (
-                  <button onClick={() => setStep(i)} className="ml-auto max-w-[85%] text-right" aria-label={`Change: ${ask[id]}`}>
+                  <button
+                    onClick={() => setStep(i)}
+                    className="ml-auto flex min-h-12 max-w-[90%] items-center gap-2 text-right active:opacity-70"
+                    aria-label={`Change: ${ask[id]}`}
+                  >
                     <Bubble from="me">{answer[id]}</Bubble>
+                    {editing && <span className="shrink-0 text-sm text-target underline underline-offset-4">Change</span>}
                   </button>
                 )
               )}
             </div>
           )
         })}
-        {editing && STEPS[step] !== 'summary' && (
-          <Button variant="primary" onClick={() => setStep(STEPS.indexOf('summary'))}>
-            Show summary
-          </Button>
-        )}
-        <div ref={endRef} />
       </div>
       <NumberPad
         open={!!pad}
