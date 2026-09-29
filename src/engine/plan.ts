@@ -1,4 +1,4 @@
-import { buildCandidates, weekVolume, type Candidate } from './candidates'
+import { availableHeavyPatterns, buildCandidates, weekVolume, type Candidate } from './candidates'
 import { config } from './config'
 import { chooseMainPatterns, recommendFocus, runTypeOf, strengthKind, type FocusResult } from './focus'
 import { suggestRun, type RunSuggestion } from './run'
@@ -33,7 +33,17 @@ export interface Plan {
 export function planToday(input: PlanInput): Plan {
   const cfg = input.cfg ?? config
   const byId = new Map(input.exercises.map((e) => [e.id, e]))
-  const focusInput = { now: input.now, history: input.history, profile: input.profile, exercises: byId, equipment: input.equipment, cfg }
+  const locationKind = strengthKind(input.equipment)
+  const heavyFor = (k: 'strength' | 'calisthenics') => availableHeavyPatterns(input.exercises, input.progressions, input.equipment, k)
+  const focusInput = {
+    now: input.now,
+    history: input.history,
+    profile: input.profile,
+    exercises: byId,
+    equipment: input.equipment,
+    heavyPatterns: heavyFor(locationKind),
+    cfg,
+  }
   const recommendation = recommendFocus(focusInput)
 
   let focus: Focus = recommendation.focus
@@ -46,11 +56,13 @@ export function planToday(input: PlanInput): Plan {
     return { recommendation, focus, candidates: [], session: [], run }
   }
 
-  const kind = focus === 'calisthenics' ? 'calisthenics' : strengthKind(input.equipment) === 'calisthenics' ? 'calisthenics' : 'strength'
+  // Without lifting equipment, "strength" means calisthenics.
+  const kind = focus === 'calisthenics' || locationKind === 'calisthenics' ? 'calisthenics' : 'strength'
+  const count = input.minutes <= cfg.r16.oneMainAtMinutes ? 1 : 2
   const mainPatterns =
-    recommendation.mainPatterns.length && !recommendation.focus.startsWith('run')
-      ? recommendation.mainPatterns.slice(0, input.minutes <= cfg.r16.oneMainAtMinutes ? 1 : 2)
-      : chooseMainPatterns(focusInput, input.minutes <= cfg.r16.oneMainAtMinutes ? 1 : 2, true)
+    recommendation.mainPatterns.length && !recommendation.focus.startsWith('run') && kind === locationKind
+      ? recommendation.mainPatterns.slice(0, count)
+      : chooseMainPatterns({ ...focusInput, heavyPatterns: heavyFor(kind) }, count, true)
 
   const candidates = buildCandidates({
     now: input.now,

@@ -7,6 +7,7 @@ import { loadEngineHistory } from '../../db/history'
 import { getProfile, type StoredProfile } from '../../db/profile'
 import { getSetting, setSetting } from '../../db/repo'
 import { db, type Location } from '../../db/schema'
+import { strengthKind } from '../../engine/focus'
 import { planToday } from '../../engine/plan'
 import { BODY_AREAS, type BodyArea, type Equipment, type Exercise, type PainReport, type Progression, type TrainingHistory } from '../../engine/types'
 import { navigate } from '../../router'
@@ -143,17 +144,34 @@ function CheckinForm(props: {
   }
 
   const recRun = recommended.recommendation.focus.startsWith('run')
+  // The location decides the kind of session: lifting equipment → strength, otherwise calisthenics.
+  const hereKind = strengthKind(equipment)
   const choices: [Choice, string][] = [
     ['recommended', 'Coach’s pick'],
-    ['strength', 'Strength'],
-    ['calisthenics', 'Calisthenics'],
+    hereKind === 'strength' ? ['strength', 'Strength'] : ['calisthenics', 'Calisthenics'],
     ['run', 'Run'],
   ]
+  // A choice that doesn't exist at this location falls back to the coach's pick.
+  const choiceHere = choices.some(([v]) => v === choice) ? choice : 'recommended'
+  if (choiceHere !== choice) setChoice(choiceHere)
 
   return (
     <div className="flex min-h-full flex-col">
       <Header title="Today" onBack={() => navigate('/', true)} />
       <div className="flex flex-1 flex-col gap-5 px-4 py-4">
+        {/* Where you are decides the rest: strength at the gym, calisthenics at home. */}
+        {locations.length > 1 && (
+          <Row label="Where are you?">
+            <div className="flex gap-2">
+              {locations.map((l) => (
+                <Chip key={l.id} selected={locationId === l.id} onClick={() => setLocationId(l.id)} className="flex-1">
+                  {l.name}
+                </Chip>
+              ))}
+            </div>
+          </Row>
+        )}
+
         <section className="rounded-2xl border border-target/40 bg-surface p-4">
           <div className="text-sm text-target">Coach’s pick</div>
           <div className="mt-1 text-xl font-semibold">{headline(recommended)}</div>
@@ -165,7 +183,7 @@ function CheckinForm(props: {
         </section>
 
         <Row label="What are we doing?">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {choices.map(([v, l]) => (
               <Chip key={v} selected={choice === v} onClick={() => setChoice(v)}>
                 {l}
@@ -216,17 +234,6 @@ function CheckinForm(props: {
           </div>
         </Row>
 
-        {locations.length > 1 && (
-          <Row label="Where are you?">
-            <div className="flex gap-2">
-              {locations.map((l) => (
-                <Chip key={l.id} selected={locationId === l.id} onClick={() => setLocationId(l.id)} className="flex-1">
-                  {l.name}
-                </Chip>
-              ))}
-            </div>
-          </Row>
-        )}
       </div>
 
       <div className="pb-safe sticky bottom-0 border-t border-line bg-bg px-4 pt-3">

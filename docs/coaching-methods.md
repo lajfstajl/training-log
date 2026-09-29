@@ -174,6 +174,8 @@ This is shown as a "reset", not a failure. There are no scheduled or reactive de
 
 **Implemented by.** Ladders are seeded in `src/db/seed.ts`. The current step is chosen in `buildCandidates` (latest trained step, or `config.r8.defaultStep`; the pull-up ladder uses the setup answer). Stepping up and down is in `nextTarget`. Weighted pull-ups and dips become the heavy lift only once the ladder top step has been reached (`config.r8.weightedAfterLadder`).
 
+**Location (added 2026-09-29).** Exercises can list alternative equipment (`equipmentAlt`), for example rings instead of a pull-up bar for pull-ups, leg raises, dead hangs and front levers, or rings instead of dip bars for L-sits. If the current ladder step can't be done at the chosen location, the nearest step that can be done is used, easier steps first. For example, at a rings-only home the band-assisted pull-up becomes negative pull-ups, and bar dips become ring dips. Practical convention.
+
 ## Running
 
 ### R9. Single run distance cap
@@ -312,7 +314,11 @@ This is shown as a "reset", not a failure. There are no scheduled or reactive de
    - easy by default
    - at most one hard run in 7 days, and only with fresh legs and at least 2 runs a week planned
    - an occasional long run
-4. **Otherwise:** full-body strength with the R5 heavy rotation. At a location without lifting equipment it becomes calisthenics (ladders).
+4. **Otherwise:** full-body strength with the R5 heavy rotation. **The location decides the kind:**
+   - With lifting equipment (the gym), the session is strength.
+   - Without it (a rings-only home), the session is calisthenics, even if "strength" is chosen.
+   - Heavy slots only go to patterns that can be trained heavy at that location (`availableHeavyPatterns`). At home there is no hinge, so the lower-body slot goes to pistol squats.
+   - The check-in asks "Where are you?" first and offers only the matching choice.
 
 The weekly aim comes from setup (2, 3, 4, or "it varies", which counts as 3). It is a soft target that only shapes rule 3.
 

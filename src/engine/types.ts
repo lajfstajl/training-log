@@ -59,7 +59,10 @@ export interface Exercise {
   pattern: Pattern
   primaryMuscles: Muscle[]
   secondaryMuscles: Muscle[]
+  /** Everything the exercise needs. */
   equipment: Equipment[]
+  /** Optional alternative set that works instead, e.g. rings instead of a pull-up bar. */
+  equipmentAlt?: Equipment[]
   /** Reps for rep work, seconds for timed holds. */
   rangeMin: number
   rangeMax: number

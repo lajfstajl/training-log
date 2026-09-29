@@ -68,6 +68,31 @@ export function estimateMinutes(t: Target, ex: Exercise, role: Role, cfg = confi
   return Math.round(((work + rest) / 60 + warm + cfg.time.transitionMin) * 10) / 10
 }
 
+/** True if the location has everything the exercise needs, or its alternative set (e.g. rings for a bar). */
+export function hasEquipment(ex: Pick<Exercise, 'equipment' | 'equipmentAlt'>, available: Equipment[]): boolean {
+  const has = (list: Equipment[]) => list.every((q) => available.includes(q))
+  return has(ex.equipment) || (!!ex.equipmentAlt && has(ex.equipmentAlt))
+}
+
+/**
+ * Patterns that can get a heavy slot at this location: main lifts (strength) or ladder skills.
+ * At a rings-only home, for example, there is no hinge, so the lower slot goes to squats (pistols).
+ */
+export function availableHeavyPatterns(
+  exercises: Exercise[],
+  progressions: Progression[],
+  equipment: Equipment[],
+  kind: 'strength' | 'calisthenics',
+): Set<string> {
+  const ladder = new Set(progressions.flatMap((p) => p.steps.map((s) => s.exerciseId)))
+  return new Set(
+    exercises
+      .filter((ex) => !ex.archived && hasEquipment(ex, equipment) && (kind === 'strength' ? ex.isMainLift || ladder.has(ex.id) : ladder.has(ex.id)))
+      .filter((ex) => kind === 'strength' || ex.trackingType !== 'weight_reps')
+      .map((ex) => ex.pattern),
+  )
+}
+
 /** Current step of each ladder: the step trained most recently, or a default from setup. */
 function currentLadderSteps(input: CandidateInput): Map<string, number> {
   const cfg = input.cfg ?? config
@@ -102,9 +127,23 @@ export function buildCandidates(input: CandidateInput): Candidate[] {
   const available = (ex: Exercise) =>
     !ex.archived &&
     ex.trackingType !== 'run' &&
-    ex.equipment.every((q) => checkin.equipment.includes(q)) &&
+    hasEquipment(ex, checkin.equipment) &&
     !profile.avoidAreas.some((a) => stressesArea(ex, a, cfg)) &&
     (checkin.kind === 'strength' || ex.trackingType !== 'weight_reps')
+
+  // R8 + location: if the current ladder step can't be done here, use the nearest step that can
+  // (easier first, then harder).
+  for (const p of input.progressions) {
+    const cur = steps.get(p.id)!
+    const ok = (i: number) => {
+      const ex = byId.get(p.steps[i]?.exerciseId)
+      return !!ex && available(ex)
+    }
+    if (ok(cur)) continue
+    const order = [...Array.from({ length: cur }, (_, k) => cur - 1 - k), ...Array.from({ length: p.steps.length - cur - 1 }, (_, k) => cur + 1 + k)]
+    const alt = order.find(ok)
+    if (alt !== undefined) steps.set(p.id, alt)
+  }
 
   // Pool: available exercises, with only the current step of each ladder.
   const pool = input.exercises.filter((ex) => {

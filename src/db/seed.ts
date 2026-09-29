@@ -22,6 +22,8 @@ interface SeedOpts {
   unilateral?: boolean
   ladder?: [string, number]
   rest?: number
+  /** Alternative equipment that works instead, e.g. rings for a pull-up bar. */
+  alt?: Equipment[]
 }
 
 function ex(
@@ -51,6 +53,7 @@ function ex(
     primaryMuscles,
     secondaryMuscles,
     equipment,
+    equipmentAlt: opts.alt,
     rangeMin,
     rangeMax,
     targetRir: opts.rir ?? (defaults.rir as Rir),
@@ -103,11 +106,11 @@ export const SEED_EXERCISES: Exercise[] = [
   ex('cable-fly', 'Cable fly', 'accessory', 'weight_reps', 'isolation', ['chest'], ['shoulders'], ['cable'], { increment: inc.machine }),
 
   // Calisthenics rep work (R7: 5 to 12 reps). Ladder steps per R8.
-  ex('pull-up-negative', 'Negative pull-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back'], ['biceps'], ['pullup_bar'], { range: [3, 6], ladder: ['ladder-pull-up', 0] }),
+  ex('pull-up-negative', 'Negative pull-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back'], ['biceps'], ['pullup_bar'], { range: [3, 6], ladder: ['ladder-pull-up', 0], alt: ['rings'] }),
   ex('pull-up-band', 'Band-assisted pull-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back'], ['biceps'], ['pullup_bar', 'bands'], { ladder: ['ladder-pull-up', 1] }),
-  ex('pull-up', 'Pull-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back'], ['biceps'], ['pullup_bar'], { ladder: ['ladder-pull-up', 2] }),
-  ex('chin-up', 'Chin-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back', 'biceps'], [], ['pullup_bar']),
-  ex('inverted-row', 'Inverted row', 'calisthenics', 'bodyweight_reps', 'horizontal_pull', ['back'], ['biceps'], ['rings'], { range: [8, 15] }),
+  ex('pull-up', 'Pull-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back'], ['biceps'], ['pullup_bar'], { ladder: ['ladder-pull-up', 2], alt: ['rings'] }),
+  ex('chin-up', 'Chin-up', 'calisthenics', 'bodyweight_reps', 'vertical_pull', ['back', 'biceps'], [], ['pullup_bar'], { alt: ['rings'] }),
+  ex('inverted-row', 'Inverted row', 'calisthenics', 'bodyweight_reps', 'horizontal_pull', ['back'], ['biceps'], ['rings'], { range: [8, 15], alt: ['barbell', 'rack'] }),
   ex('push-up-incline', 'Incline push-up', 'calisthenics', 'bodyweight_reps', 'horizontal_push', ['chest'], ['triceps', 'shoulders'], [], { range: [8, 15], ladder: ['ladder-push-up', 0] }),
   ex('push-up', 'Push-up', 'calisthenics', 'bodyweight_reps', 'horizontal_push', ['chest'], ['triceps', 'shoulders'], [], { range: [8, 15], ladder: ['ladder-push-up', 1] }),
   ex('push-up-decline', 'Decline push-up', 'calisthenics', 'bodyweight_reps', 'horizontal_push', ['chest'], ['triceps', 'shoulders'], ['bench'], { range: [8, 15], ladder: ['ladder-push-up', 2] }),
@@ -116,22 +119,22 @@ export const SEED_EXERCISES: Exercise[] = [
   ex('dip', 'Dip', 'calisthenics', 'bodyweight_reps', 'horizontal_push', ['chest', 'triceps'], ['shoulders'], ['dip_bars'], { ladder: ['ladder-dip', 1] }),
   ex('ring-dip', 'Ring dip', 'calisthenics', 'bodyweight_reps', 'horizontal_push', ['chest', 'triceps'], ['shoulders'], ['rings'], { ladder: ['ladder-dip', 2] }),
   ex('pike-push-up', 'Pike push-up', 'calisthenics', 'bodyweight_reps', 'vertical_push', ['shoulders'], ['triceps'], []),
-  ex('pistol-box', 'Box pistol squat', 'calisthenics', 'bodyweight_reps', 'squat', ['quads', 'glutes'], [], ['bench'], { unilateral: true, ladder: ['ladder-pistol', 0] }),
-  ex('pistol-assisted', 'Assisted pistol squat', 'calisthenics', 'bodyweight_reps', 'squat', ['quads', 'glutes'], [], ['bands'], { unilateral: true, ladder: ['ladder-pistol', 1] }),
+  ex('pistol-box', 'Box pistol squat (to a chair)', 'calisthenics', 'bodyweight_reps', 'squat', ['quads', 'glutes'], [], [], { unilateral: true, ladder: ['ladder-pistol', 0] }),
+  ex('pistol-assisted', 'Assisted pistol squat (hold rings or a door frame)', 'calisthenics', 'bodyweight_reps', 'squat', ['quads', 'glutes'], [], [], { unilateral: true, ladder: ['ladder-pistol', 1] }),
   ex('pistol-squat', 'Pistol squat', 'calisthenics', 'bodyweight_reps', 'squat', ['quads', 'glutes'], ['core'], [], { range: [3, 8], unilateral: true, ladder: ['ladder-pistol', 2] }),
-  ex('hanging-leg-raise', 'Hanging leg raise', 'calisthenics', 'bodyweight_reps', 'core', ['core'], [], ['pullup_bar'], { range: [6, 12] }),
+  ex('hanging-leg-raise', 'Hanging leg raise', 'calisthenics', 'bodyweight_reps', 'core', ['core'], [], ['pullup_bar'], { range: [6, 12], alt: ['rings'] }),
 
   // Timed holds (R7: build seconds within a range)
   ex('plank', 'Plank', 'hold', 'timed_hold', 'core', ['core'], [], [], { range: [30, 60] }),
   ex('hollow-hold', 'Hollow body hold', 'hold', 'timed_hold', 'core', ['core'], [], []),
-  ex('dead-hang', 'Dead hang', 'hold', 'timed_hold', 'skill', [], ['back'], ['pullup_bar'], { range: [20, 60] }),
-  ex('l-sit-supported', 'Foot-supported L-sit', 'hold', 'timed_hold', 'skill', ['core'], ['triceps'], ['dip_bars'], { ladder: ['ladder-l-sit', 0] }),
-  ex('l-sit-tuck', 'Tuck L-sit', 'hold', 'timed_hold', 'skill', ['core'], ['triceps'], ['dip_bars'], { ladder: ['ladder-l-sit', 1] }),
-  ex('l-sit', 'L-sit', 'hold', 'timed_hold', 'skill', ['core'], ['triceps'], ['dip_bars'], { ladder: ['ladder-l-sit', 2] }),
-  ex('front-lever-tuck', 'Tuck front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [8, 20], ladder: ['ladder-front-lever', 0] }),
-  ex('front-lever-adv-tuck', 'Advanced tuck front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [8, 20], ladder: ['ladder-front-lever', 1] }),
-  ex('front-lever-one-leg', 'One-leg front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [5, 15], ladder: ['ladder-front-lever', 2] }),
-  ex('front-lever-straddle', 'Straddle front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [5, 15], ladder: ['ladder-front-lever', 3] }),
+  ex('dead-hang', 'Dead hang', 'hold', 'timed_hold', 'skill', [], ['back'], ['pullup_bar'], { range: [20, 60], alt: ['rings'] }),
+  ex('l-sit-supported', 'Foot-supported L-sit', 'hold', 'timed_hold', 'skill', ['core'], ['triceps'], ['dip_bars'], { ladder: ['ladder-l-sit', 0], alt: ['rings'] }),
+  ex('l-sit-tuck', 'Tuck L-sit', 'hold', 'timed_hold', 'skill', ['core'], ['triceps'], ['dip_bars'], { ladder: ['ladder-l-sit', 1], alt: ['rings'] }),
+  ex('l-sit', 'L-sit', 'hold', 'timed_hold', 'skill', ['core'], ['triceps'], ['dip_bars'], { ladder: ['ladder-l-sit', 2], alt: ['rings'] }),
+  ex('front-lever-tuck', 'Tuck front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [8, 20], ladder: ['ladder-front-lever', 0], alt: ['rings'] }),
+  ex('front-lever-adv-tuck', 'Advanced tuck front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [8, 20], ladder: ['ladder-front-lever', 1], alt: ['rings'] }),
+  ex('front-lever-one-leg', 'One-leg front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [5, 15], ladder: ['ladder-front-lever', 2], alt: ['rings'] }),
+  ex('front-lever-straddle', 'Straddle front lever', 'hold', 'timed_hold', 'skill', ['back', 'core'], [], ['pullup_bar'], { range: [5, 15], ladder: ['ladder-front-lever', 3], alt: ['rings'] }),
 ]
 
 function ladder(id: string, name: string, exerciseIds: string[]): Progression {
@@ -157,16 +160,32 @@ export const SEED_PROGRESSIONS: Progression[] = [
 
 export const SEED_LOCATIONS: Location[] = [
   { id: 'loc-gym', name: 'Gym', equipment: ['barbell', 'rack', 'bench', 'dumbbells', 'cable', 'machine', 'pullup_bar', 'dip_bars', 'kettlebell', 'bands'] },
-  { id: 'loc-home', name: 'Home', equipment: ['pullup_bar', 'rings', 'bands'] },
+  { id: 'loc-home', name: 'Home', equipment: ['rings'] },
   { id: 'loc-outdoors', name: 'Outdoors', equipment: [] },
 ]
 
-/** Adds any seed rows that are missing. Never overwrites rows the user may have edited. */
+/**
+ * Adds any seed rows that are missing, and refreshes seed exercises the user has never edited
+ * (updatedAt === createdAt) so improvements reach existing installs. Edited rows are left alone,
+ * except the alternative-equipment list, which the user cannot edit.
+ */
 export async function seedIfNeeded(db: TrainingDb, now = Date.now()): Promise<number> {
   return db.transaction('rw', db.exercises, db.progressions, db.locations, async () => {
-    const existing = new Set((await db.exercises.toCollection().primaryKeys()) as string[])
+    const rows = await db.exercises.toArray()
+    const existing = new Map(rows.map((r) => [r.id, r]))
     const missing = SEED_EXERCISES.filter((e) => !existing.has(e.id)).map((e) => ({ ...e, createdAt: now, updatedAt: now }))
     await db.exercises.bulkAdd(missing)
+    for (const seed of SEED_EXERCISES) {
+      const row = existing.get(seed.id)
+      if (!row) continue
+      const patch: Partial<typeof row> = {}
+      if (JSON.stringify(row.equipmentAlt) !== JSON.stringify(seed.equipmentAlt)) patch.equipmentAlt = seed.equipmentAlt
+      if (row.updatedAt === row.createdAt) {
+        if (row.name !== seed.name) patch.name = seed.name
+        if (JSON.stringify(row.equipment) !== JSON.stringify(seed.equipment)) patch.equipment = seed.equipment
+      }
+      if (Object.keys(patch).length) await db.exercises.update(seed.id, patch)
+    }
 
     const existingP = new Set((await db.progressions.toCollection().primaryKeys()) as string[])
     await db.progressions.bulkAdd(SEED_PROGRESSIONS.filter((p) => !existingP.has(p.id)))

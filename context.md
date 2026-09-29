@@ -23,6 +23,14 @@ Last updated: 2026-09-28 (end of the Phase 1 session).
      - The Preview "Change" sheet has "Tell the coach" free text.
      - Verified in the browser: a fake key gives a clear "key not accepted" message, and the check-in falls back to the engine's plan.
      - **2026-09-29:** the owner confirmed on the phone, with their own key, that the AI coach works.
+  - **2026-09-29, the owner's setup:** calisthenics only at home, where there are **only rings**. Strength only at the gym, which has full equipment.
+    - The app now handles this:
+      - exercises list ring alternatives (`equipmentAlt`)
+      - ladder steps that can't be done fall back to the nearest possible step
+      - heavy slots only go to patterns possible at the location
+      - the check-in asks location first and offers only the matching choice
+    - Seed exercises the owner never edited are refreshed on existing installs (`seedIfNeeded`).
+    - Location equipment is the owner's own data. The owner must set Home to rings only in Settings → Coach setup (this is not done automatically).
   - **Next:** collect the owner's feedback from real sessions. Then the Phase 3 items: Garmin paste parsing, progress charts, backup reminder.
   - Deferred from the plan: turning the setup "anything else" note into suggested avoid-chips via AI. The note is passed to the AI as context instead.
   - **Plan approved 2026-09-28**, with build steps A (engine plus fixtures), B (onboarding, profile, runs), C (check-in and preview, engine only), and D (AI layer).

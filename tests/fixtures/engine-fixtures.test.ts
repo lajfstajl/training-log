@@ -169,13 +169,37 @@ describe('coach scenarios (R16 and friends)', () => {
     expect(r.ruleIds).toContain('R12')
   })
 
-  it('home location → calisthenics with the current ladder steps', () => {
+  it('home with rings only → calisthenics that can all be done on rings or the floor', () => {
+    expect(HOME).toEqual(['rings'])
     const p = plan({ equipment: HOME, profile: profile({ pullUps: 3 }) })
     expect(p.focus).toBe('calisthenics')
     expect(p.session.every((c) => c.exercise.trackingType !== 'weight_reps')).toBe(true)
     const ids = p.candidates.map((c) => c.id)
-    expect(ids).toContain('pull-up-band') // 3 pull-ups → band-assisted step
-    expect(ids).not.toContain('pull-up')
+    // 3 pull-ups → band-assisted step, but there are no bands: nearest easier step that works on rings.
+    expect(ids).toContain('pull-up-negative')
+    expect(ids).not.toContain('pull-up-band')
+    // Dip ladder: bar dips need dip bars, so the ring dip step is used.
+    expect(ids).toContain('ring-dip')
+    expect(ids).not.toContain('dip')
+    // Pistol ladder starts with the chair version; rows and leg raises work on rings.
+    expect(ids).toEqual(expect.arrayContaining(['pistol-box', 'inverted-row', 'hanging-leg-raise']))
+    // Heavy slots only for patterns doable here: no hinge at home, so legs get pistols.
+    const mains = p.session.filter((c) => c.role === 'main')
+    expect(mains.map((c) => c.exercise.pattern)).not.toContain('hinge')
+    expect(mains.some((c) => c.exercise.pattern === 'squat')).toBe(true)
+  })
+
+  it('choosing "strength" at home still builds a calisthenics session', () => {
+    const p = plan({ equipment: HOME, focus: 'strength' })
+    expect(p.focus).toBe('calisthenics')
+    expect(p.session.every((c) => c.exercise.trackingType !== 'weight_reps')).toBe(true)
+  })
+
+  it('calisthenics chosen at the gym uses calisthenics heavy patterns (no deadlift slot)', () => {
+    const h = history([exposure('back-squat', 1, same(3, 100, 5, 2))]) // squat recent → hinge would be due
+    const p = plan({ history: h, focus: 'calisthenics' })
+    expect(p.session.every((c) => c.exercise.trackingType !== 'weight_reps')).toBe(true)
+    expect(p.session.filter((c) => c.role === 'main').length).toBeGreaterThan(0)
   })
 
   it('busy-life cap: even with 75 minutes, at most 2 heavy + 3 accessories + 1 core', () => {

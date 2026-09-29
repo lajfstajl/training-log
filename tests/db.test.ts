@@ -36,6 +36,19 @@ describe('schema and seed', () => {
     expect((await db.exercises.get('back-squat'))!.increment).toBe(5) // user edit kept
   })
 
+  it('refreshes unedited seed exercises on existing installs, and keeps user edits', async () => {
+    // Simulate an older install: box pistol needed a bench; pull-ups had no ring alternative.
+    await db.exercises.update('pistol-box', { equipment: ['bench'], name: 'Box pistol squat', equipmentAlt: undefined })
+    await db.exercises.update('pull-up', { equipmentAlt: undefined, name: 'My pull-ups', updatedAt: 99 }) // user-edited
+    await seedIfNeeded(db, 0)
+    const box = (await db.exercises.get('pistol-box'))!
+    expect(box.equipment).toEqual([])
+    expect(box.name).toBe('Box pistol squat (to a chair)')
+    const pu = (await db.exercises.get('pull-up'))!
+    expect(pu.name).toBe('My pull-ups') // the user's edit is kept
+    expect(pu.equipmentAlt).toEqual(['rings']) // alternatives are not user-editable, so always refreshed
+  })
+
   it('every ladder step and seed reference is consistent', () => {
     const ids = new Set(SEED_EXERCISES.map((e) => e.id))
     for (const p of SEED_PROGRESSIONS) for (const s of p.steps) expect(ids.has(s.exerciseId)).toBe(true)

@@ -21,6 +21,8 @@ export interface FocusInput {
   profile: CoachProfile
   exercises: Map<string, Exercise>
   equipment: Equipment[]
+  /** Patterns that can get a heavy slot at this location (see availableHeavyPatterns). */
+  heavyPatterns?: Set<string>
   cfg?: typeof config
 }
 
@@ -50,14 +52,17 @@ export function chooseMainPatterns(input: FocusInput, count: 1 | 2, allowLower: 
   const recovered = (p: string) => hoursBetween(last.get(p as Pattern) ?? -Infinity, input.now) >= cfg.r5.minHoursBetweenHeavyPattern
   const byDue = (ps: string[]) => [...ps].sort((a, b) => Number(recovered(b)) - Number(recovered(a)) || age(b) - age(a))
 
-  const lower = allowLower ? byDue(cfg.r16.lowerMainPatterns) : []
-  const upper = byDue(cfg.r16.upperMainPatterns)
-  if (count === 1) return [byDue([...lower, ...upper])[0] as Pattern]
-  if (lower.length && recovered(lower[0])) return [lower[0], upper[0]] as Pattern[]
+  // Only patterns that can be trained heavy at this location.
+  const here = (ps: string[]) => (input.heavyPatterns ? ps.filter((p) => input.heavyPatterns!.has(p)) : ps)
+  const lower = allowLower ? byDue(here(cfg.r16.lowerMainPatterns)) : []
+  const upper = byDue(here(cfg.r16.upperMainPatterns))
+  if (count === 1) return [byDue([...lower, ...upper])[0]].filter(Boolean) as Pattern[]
+  if (lower.length && upper.length && recovered(lower[0])) return [lower[0], upper[0]] as Pattern[]
   // Lower blocked or not recovered: two upper patterns, one push and one pull.
-  const push = upper.find((p) => p.includes('push'))!
-  const pull = upper.find((p) => p.includes('pull'))!
-  return (age(push) >= age(pull) ? [push, pull] : [pull, push]) as Pattern[]
+  const push = upper.find((p) => p.includes('push'))
+  const pull = upper.find((p) => p.includes('pull'))
+  if (push && pull) return (age(push) >= age(pull) ? [push, pull] : [pull, push]) as Pattern[]
+  return [...lower, ...upper].slice(0, 2) as Pattern[]
 }
 
 const PATTERN_WORD: Record<string, string> = {
