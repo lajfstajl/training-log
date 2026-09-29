@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { RunType } from './engine/types'
+import { MovePhone } from './features/backup/MovePhone'
 import { Checkin } from './features/coach/Checkin'
 import { Onboarding } from './features/coach/Onboarding'
 import { Preview } from './features/coach/Preview'
@@ -55,6 +56,7 @@ function Screen({ path }: { path: string }) {
   else if (path === '/settings/exercises') page = <Library />
   else if ((m = match('/settings/exercises/:id', path))) page = <ExerciseEdit exerciseId={m.id} />
   else if (path === '/settings/methods') page = <MethodsDoc />
+  else if (path === '/settings/move') page = <MovePhone />
   else if (path.startsWith('/settings')) page = <SettingsTab />
   else page = <TodayTab />
 

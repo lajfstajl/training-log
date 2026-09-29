@@ -1,28 +1,19 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useRef, useState } from 'react'
-import { downloadBackup, parseBackup, restoreBackup, type ParseResult } from '../../db/backup'
+import { useEffect, useState } from 'react'
 import { db } from '../../db/schema'
 import { ENGINE_VERSION } from '../../engine/config'
 import { fmtDate } from '../../lib/format'
 import { navigate } from '../../router'
-import { Button, Sheet } from '../../ui'
+import { BackupNowButton, RestoreButton } from '../backup/BackupControls'
 import { AiCoachSettings } from './AiCoachSettings'
 
 export function SettingsTab() {
   const lastExportAt = useLiveQuery(async () => (await db.settings.get('lastExportAt'))?.value as number | undefined, [])
   const [persisted, setPersisted] = useState<boolean>()
-  const [preview, setPreview] = useState<ParseResult>()
-  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     navigator.storage?.persisted?.().then(setPersisted).catch(() => {})
   }, [])
-
-  const onFile = async (f: File | undefined) => {
-    if (!f) return
-    setPreview(parseBackup(await f.text()))
-    if (fileRef.current) fileRef.current.value = ''
-  }
 
   return (
     <div className="pt-safe px-4">
@@ -40,19 +31,18 @@ export function SettingsTab() {
 
       <Section title="Backup">
         <p className="mb-3 text-sm text-muted">
-          Your data lives only on this device. Last export: {lastExportAt ? fmtDate(lastExportAt) : 'never'}.
+          Your data lives only on this phone. Last backup: {lastExportAt ? fmtDate(lastExportAt) : 'never'}. Save it to iCloud Drive with the
+          share sheet.
         </p>
-        <div className="flex gap-2">
-          <Button variant="primary" className="flex-1" onClick={() => downloadBackup()}>
-            Export JSON
-          </Button>
-          <Button className="flex-1" onClick={() => fileRef.current?.click()}>
-            Import…
-          </Button>
+        <div className="flex flex-col gap-2">
+          <BackupNowButton label="Back up to iCloud Drive" />
+          <RestoreButton />
         </div>
-        <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
-        <p className="mt-3 text-xs text-muted">
-          Storage {persisted === undefined ? 'status unknown' : persisted ? 'is persistent' : 'may be cleared by the browser; export regularly'}.
+        <div className="mt-2">
+          <Row label="Move to a new phone" hint="Step-by-step guide" onClick={() => navigate('/settings/move')} />
+        </div>
+        <p className="mt-2 text-xs text-muted">
+          Storage {persisted === undefined ? 'status unknown' : persisted ? 'is persistent' : 'may be cleared by the browser; back up regularly'}.
         </p>
       </Section>
 
@@ -60,38 +50,6 @@ export function SettingsTab() {
         Training Log {__APP_VERSION__} · engine {ENGINE_VERSION}
       </p>
 
-      <Sheet open={!!preview} onClose={() => setPreview(undefined)} title="Import backup">
-        {preview && !preview.ok && <p className="text-bad">{preview.error}</p>}
-        {preview?.ok && (
-          <>
-            <p className="mb-2 text-sm text-muted">Exported {fmtDate(preview.backup.exportedAt)}. It contains:</p>
-            <ul className="mb-4 text-sm num">
-              <li>{preview.counts.sessions} sessions</li>
-              <li>{preview.counts.sets} sets</li>
-              <li>{preview.counts.exercises} exercises</li>
-            </ul>
-            <p className="mb-4 rounded-xl border border-warn/50 p-3 text-sm text-warn">
-              Importing replaces all data on this device. Export first if you want to keep what is here now.
-            </p>
-            <div className="flex gap-2">
-              <Button className="flex-1" onClick={() => setPreview(undefined)}>
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                className="flex-1"
-                onClick={async () => {
-                  await restoreBackup(preview.backup)
-                  setPreview(undefined)
-                  navigate('/', true)
-                }}
-              >
-                Replace my data
-              </Button>
-            </div>
-          </>
-        )}
-      </Sheet>
     </div>
   )
 }

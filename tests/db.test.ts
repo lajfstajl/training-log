@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { exportBackup, parseBackup, restoreBackup } from '../src/db/backup'
+import { backupFile, backupStatus, exportBackup, parseBackup, restoreBackup, snoozeBackupReminder } from '../src/db/backup'
+import { saveRun } from '../src/db/history'
+import { DEFAULT_PROFILE, getProfile, saveProfile } from '../src/db/profile'
 import {
   activeSession,
   addExerciseToSession,
@@ -167,6 +169,52 @@ describe('backup', () => {
     const again = await exportBackup(10)
     expect(again).toEqual(backup)
     expect((await db.settings.get('apiKey'))!.value).toBe('local')
+  })
+
+  it('reminder: due only with data and no backup in 7 days; "Later" snoozes it', async () => {
+    const day = 86_400_000
+    const t = 100 * day
+    expect((await backupStatus(t)).due).toBe(false) // no training data yet
+    await saveRun({ date: t, distanceKm: 5, durationSec: 1800, runType: 'easy', notes: '' })
+    expect((await backupStatus(t)).due).toBe(true) // data, never backed up
+    await db.settings.put({ key: 'lastExportAt', value: t - 3 * day })
+    expect((await backupStatus(t)).due).toBe(false) // recent backup
+    await db.settings.put({ key: 'lastExportAt', value: t - 8 * day })
+    expect((await backupStatus(t)).due).toBe(true)
+    await snoozeBackupReminder(2, t)
+    expect((await backupStatus(t + day)).snoozed).toBe(true)
+    expect((await backupStatus(t + 3 * day)).snoozed).toBe(false)
+  })
+
+  it('moving to a new phone: the backup file restores everything onto an empty device (except the API key)', async () => {
+    const sid = await startSession(['bench-press'], 5)
+    const v = (await loadSessionView(sid))!
+    await updateSet(v.items[0].sets[0].id, { kg: 80, reps: 5 }, 6)
+    await confirmSet(v.items[0].sets[0].id, 6)
+    await finishSession(sid, 7)
+    await saveRun({ date: 8, distanceKm: 6, durationSec: 2000, runType: 'easy', notes: '' })
+    await saveProfile({ ...DEFAULT_PROFILE, completedAt: 9 })
+    await db.settings.put({ key: 'apiKey', value: 'old-phone-key' })
+
+    const file = await backupFile(10)
+    expect(file.name).toMatch(/^training-log-\d{4}-\d{2}-\d{2}\.json$/)
+    const text = await file.text()
+    expect(text).not.toContain('old-phone-key')
+
+    // "New phone": empty database, first launch seeds exercises.
+    await Promise.all(TABLE_NAMES.map((t) => db[t].clear()))
+    await seedIfNeeded(db, 0)
+    const parsed = parseBackup(text)
+    if (!parsed.ok) throw new Error(parsed.error)
+    await restoreBackup(parsed.backup)
+
+    expect(await db.sessions.count()).toBe(1)
+    expect(await db.runs.count()).toBe(1)
+    const logged = await db.sets.where('sessionId').equals(sid).filter((s) => s.completedAt !== undefined).toArray()
+    expect(logged.map((s) => [s.kg, s.reps])).toEqual([[80, 5]])
+    expect(await getProfile()).toBeDefined()
+    expect(await db.settings.get('apiKey')).toBeUndefined()
+    expect(await db.exercises.count()).toBe(SEED_EXERCISES.length)
   })
 
   it('rejects files that are not backups', () => {

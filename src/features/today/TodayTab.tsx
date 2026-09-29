@@ -10,6 +10,7 @@ import { fractionalVolume } from '../../engine/volume'
 import { MUSCLE_LABEL } from '../../lib/format'
 import { navigate } from '../../router'
 import { Button } from '../../ui'
+import { BackupReminder, RestoreButton } from '../backup/BackupControls'
 import { RunRow, SessionRow } from '../history/SessionRow'
 
 async function weeklyVolume(now: number) {
@@ -60,8 +61,16 @@ export function TodayTab() {
           <Button variant="primary" className="mt-3 w-full" onClick={() => navigate('/welcome')}>
             Let’s go
           </Button>
+          {recent.length === 0 && runs.length === 0 && (
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="mb-2 text-sm text-muted">New phone? Bring your training along from a backup in iCloud Drive.</p>
+              <RestoreButton label="Restore from a backup" />
+            </div>
+          )}
         </div>
       )}
+
+      <BackupReminder />
 
       {active ? (
         <div className="rounded-2xl border border-target/40 bg-surface p-4">

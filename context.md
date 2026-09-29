@@ -31,7 +31,16 @@ Last updated: 2026-09-28 (end of the Phase 1 session).
       - the check-in asks location first and offers only the matching choice
     - Seed exercises the owner never edited are refreshed on existing installs (`seedIfNeeded`).
     - Location equipment is the owner's own data. The owner must set Home to rings only in Settings → Coach setup (this is not done automatically).
-  - **Next:** collect the owner's feedback from real sessions. Then the Phase 3 items: Garmin paste parsing, progress charts, backup reminder.
+  - **2026-09-29, backups ("option A": stay local, make backups effortless):**
+    - The owner asked whether local-only storage is a problem and is **replacing their iPhone soon**.
+    - Decision: keep data on the phone (no cloud sync) and add easy backups. Cloud sync (for example Supabase) was deferred unless multi-device use is wanted.
+    - Built:
+      - "Back up" through the iOS share sheet (Save to Files → iCloud Drive), with a download as fallback
+      - a reminder on Today when there is data and no backup in 7 days ("Later" snoozes it for 2 days)
+      - Restore on Settings, on the "Move to a new phone" guide (`/settings/move`) and on the first screen of a fresh install
+      - after a restore, seed exercises are refreshed
+    - Verified in the browser: a full wipe-and-restore round trip.
+  - **Next:** collect the owner's feedback from real sessions. Then the Phase 3 items: Garmin paste parsing, progress charts.
   - Deferred from the plan: turning the setup "anything else" note into suggested avoid-chips via AI. The note is passed to the AI as context instead.
   - **Plan approved 2026-09-28**, with build steps A (engine plus fixtures), B (onboarding, profile, runs), C (check-in and preview, engine only), and D (AI layer).
   - The full plan is in the Claude plan file. The key design points are recorded in section 4 below.

@@ -53,9 +53,14 @@ Every push to `main` then runs the tests and deploys to `https://<you>.github.io
 
 **Install on iPhone:** open the Pages URL in Safari, tap **Share**, then **Add to Home Screen**.
 
-## Backups
+## Backups and moving to a new phone
 
-Your data lives only in the browser on that device. Use **Settings → Export JSON** regularly. The exported file never includes your API key. **Import** shows a preview and warns before it replaces anything.
+Your data lives only in the app on your phone.
+
+- **Back up:** Today shows a reminder when there is no backup from the last 7 days. Tap **Back up now**, then **Save to Files → iCloud Drive**. You can also back up any time from **Settings → Back up to iCloud Drive**.
+- **Restore:** use **Settings → Restore from a backup…**, or on a brand-new install, **Restore from a backup** on the first screen.
+- **New phone:** follow **Settings → Move to a new phone**, a step-by-step guide with the buttons built in.
+- Backups never include your API key. Paste it again after restoring.
 
 ## API key (Phase 3)
 
