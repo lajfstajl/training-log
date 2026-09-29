@@ -134,11 +134,12 @@ All details are in `docs/coaching-methods.md`. Key corrections and flags:
   - Public files contain no personal details; personal notes live in the gitignored `context.private.md`.
   - The production build sets a Content-Security-Policy: the app may only connect to itself and `api.anthropic.com`.
   - Deploy actions are pinned to commit SHAs, and Dependabot watches npm and actions.
-  - Owner to-dos:
-    - GitHub two-factor authentication
-    - GitHub Settings → Emails: "Keep my email private" and "Block command line pushes that expose my email"
-    - a dedicated Anthropic key with a low monthly spend limit and no auto-reload
-    - no other GitHub Pages sites on this account (they would share the `lajfstajl.github.io` origin and could read this app's stored data)
+  - Owner to-dos, as of 2026-09-29:
+    - ✅ GitHub two-factor authentication
+    - ✅ GitHub email privacy settings
+    - ✅ Anthropic API key set up
+    - Not yet confirmed: turn on Dependabot alerts (repo Settings → Code security).
+    - Standing rule: no other GitHub Pages sites on this account. They would share the `lajfstajl.github.io` origin and could read this app's stored data.
 
 ## 9. Environment notes (things that bit us)
 
