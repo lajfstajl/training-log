@@ -1,0 +1,11 @@
+node_modules
+dist
+dev-dist
+*.local
+.env*
+*.log
+.DS_Store
+# personal data exports never go in the repo
+training-log-*.json
+# personal notes for Claude sessions (kept on the owner's PC only)
+context.private.md

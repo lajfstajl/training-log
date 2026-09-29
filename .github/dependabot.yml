@@ -1,0 +1,15 @@
+# Keeps dependencies and the pinned deploy actions up to date (monthly, grouped to limit noise).
+# Security fixes arrive as they are published, independent of this schedule.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      all-npm:
+        patterns: ['*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

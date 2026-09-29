@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+/* Dark by default. Three kinds of numbers: target (accent), previous (muted), actual (ink, bold). */
+@theme {
+  --color-bg: #0b0d10;
+  --color-surface: #15181d;
+  --color-surface-2: #1e2229;
+  --color-line: #2c313a;
+  --color-ink: #f3f5f8;
+  --color-muted: #8d95a3;
+  --color-target: #6cb8ff;
+  --color-good: #3fd08f;
+  --color-warn: #f2b84b;
+  --color-bad: #ff7070;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px; /* prevents iOS zoom on focus */
+}
+
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 8px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
