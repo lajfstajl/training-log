@@ -21,8 +21,9 @@ Last updated: 2026-09-28 (end of the Phase 1 session).
      - The AI picks, orders and explains from the engine's candidates. It answers with ids and a rationale only; the rationale may not state loads.
      - Validation, then one retry with feedback, then the engine's plan with a note.
      - The Preview "Change" sheet has "Tell the coach" free text.
-     - Verified in the browser: a fake key gives a clear "key not accepted" message, and the check-in falls back to the engine's plan. **A real AI answer has not been tested yet**: that needs the owner's own key.
-  - **Next:** the owner tests on the phone with a real API key. Collect feedback.
+     - Verified in the browser: a fake key gives a clear "key not accepted" message, and the check-in falls back to the engine's plan.
+     - **2026-09-29:** the owner confirmed on the phone, with their own key, that the AI coach works.
+  - **Next:** collect the owner's feedback from real sessions. Then the Phase 3 items: Garmin paste parsing, progress charts, backup reminder.
   - Deferred from the plan: turning the setup "anything else" note into suggested avoid-chips via AI. The note is passed to the AI as context instead.
   - **Plan approved 2026-09-28**, with build steps A (engine plus fixtures), B (onboarding, profile, runs), C (check-in and preview, engine only), and D (AI layer).
   - The full plan is in the Claude plan file. The key design points are recorded in section 4 below.
